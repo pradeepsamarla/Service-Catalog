@@ -127,7 +127,7 @@ export const THEMES: Theme[] = [
   },
 ];
 
-export const DEFAULT_THEME: ThemeId = 'dark';
+export const DEFAULT_THEME: ThemeId = 'slate';
 
 export function applyTheme(id: ThemeId) {
   const theme = THEMES.find((candidate) => candidate.id === id) ?? THEMES[0];
