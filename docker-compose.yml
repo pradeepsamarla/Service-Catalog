@@ -1,0 +1,9 @@
+services:
+  service-flow:
+    build:
+      context: .
+    image: itsm-service-flow:latest
+    container_name: itsm-service-flow
+    ports:
+      - "8080:80"
+    restart: unless-stopped

@@ -41,6 +41,25 @@ npm run preview   # serve the production build
 npm run lint      # oxlint
 ```
 
+## Run with Docker (Docker Desktop)
+
+The image builds the app with Node 22 and serves the static bundle with nginx.
+
+```bash
+docker compose up --build       # http://localhost:8080
+docker compose down
+```
+
+Without compose:
+
+```bash
+docker build -t itsm-service-flow .
+docker run --rm -p 8080:80 itsm-service-flow
+```
+
+The container serves a production build, so it does not hot-reload — use
+`npm run dev` for development.
+
 ## Themes
 
 Three themes are switchable from the top-right control and persisted in
