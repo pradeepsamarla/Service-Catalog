@@ -1,20 +1,20 @@
 # ITSM Service Flow — Visual Prototype
 
-A standalone visual prototype that renders **one hardcoded sample ITSM service flow**
-("Employee Onboarding Request", parent service "HR Services") in a dark
-glassmorphism / swimlane aesthetic.
+A standalone prototype that renders an **entire parent service and its sub-services** as
+an enterprise service-flow diagram: one swimlane row per sub-service, moving left to
+right through the service lifecycle columns.
 
-This is a look-and-feel prototype only: there is no data ingestion, no filters and no
-service tree — just the single flow so the visual style can be validated before the
-rest of the app is wired up.
+Data comes from a spreadsheet (`.xlsx` / `.csv`) at runtime — sample data is bundled so
+the app renders something immediately.
 
 ## Stack
 
 - React + Vite + TypeScript
-- Tailwind CSS (dark by default)
-- [reactflow](https://reactflow.dev) for the node/edge canvas
+- Tailwind CSS with a CSS-variable theme layer (3 themes)
+- [reactflow](https://reactflow.dev) for the node/edge canvas (orthogonal step edges)
 - [framer-motion](https://www.framer.com/motion/) for entrance/hover animation
 - [lucide-react](https://lucide.dev) line-art icons
+- [read-excel-file](https://www.npmjs.com/package/read-excel-file) for `.xlsx` parsing
 
 ## Prerequisites
 
@@ -31,7 +31,7 @@ npm install
 npm run dev
 ```
 
-Then open the printed URL (http://localhost:5173 by default) in a browser.
+Then open the printed URL (http://localhost:5173 by default).
 
 Other scripts:
 
@@ -41,48 +41,83 @@ npm run preview   # serve the production build
 npm run lint      # oxlint
 ```
 
+## Themes
+
+Three themes are switchable from the top-right control and persisted in
+`localStorage`:
+
+| Theme | Id | Look |
+| --- | --- | --- |
+| Graphite dark | `dark` | Enterprise dark, graphite surfaces, restrained blue accent |
+| Enterprise light | `light` | White cards, neutral greys, blue accent |
+| Slate blue | `slate` | Mid-tone navy dashboard style |
+
+Every colour is a CSS variable defined in `src/theme/themes.ts`, so adding a fourth
+theme means adding one entry to `THEMES`.
+
 ## What's on screen
 
-- **Title bar** — "Flow of Employee Onboarding Request" with the parent-service
-  subtitle, plus placeholder Export and theme-toggle buttons.
-- **Drifting gradient backdrop** — four large blurred violet/blue/teal/fuchsia radial
-  blobs slowly drifting behind the canvas (CSS keyframes).
-- **Swimlanes** — `INTAKE` (top) and `FULFILLMENT` (bottom) bands with rotated side
-  labels, separated by a dashed divider.
-- **Glass stage cards** — rounded-2xl, semi-transparent dark fill, backdrop blur, thin
-  light border, soft outer glow, centered line-art icon, label, and optional detail
-  chips. Hover lifts and intensifies the glow.
-- **Glowing animated connectors** — custom bezier edge with a violet→blue→teal gradient
-  stroke, blurred halo, and a moving dashed pulse. The intake → fulfillment link is a
-  thicker "hero" connector.
-- **Canvas** — pan/zoom, MiniMap and Controls, faint dot grid, default React Flow node
-  chrome hidden.
+- **Phase bands** — `Request`, `Intake · qualification`, `Fulfillment · resolution`
+  grouping the lifecycle columns.
+- **Columns** — Service, Sub-service, Entitlement, Approval flow, Fulfillment, Support
+  group, SLA.
+- **Rows** — one alternating-stripe swimlane per sub-service, fanning out from the
+  parent-service card on the left.
+- **Cards** — relevance-specific icon per stage (parent service, request form,
+  entitlement, approval stamp, work order vs. service request, support headset, SLA
+  timer), an accent bar for emphasis/SLA state, and detail chips (approval levels,
+  fulfilment code, SLA state).
+- **Orthogonal connectors** — right-angle step edges with arrow heads; dashed and dimmed
+  when a stage is not applicable (e.g. auto-approved).
+- **Canvas** — pan/zoom, MiniMap, Controls, dot grid, legend.
 
-### Sample flow
+## Importing a spreadsheet
 
-`Onboarding Request` → `Entitlement (All DEWA Users)` → `Approval Flow (① Direct
-Manager, ② HR Head)` → `Fulfillment Type (WO)` → `Support Group (HR-Ops)` →
-`SLA (3 WD)`
+Click **Import Excel** and pick an `.xlsx`, `.xls` or `.csv` file. Every row is one
+sub-service; rows are grouped into services by the `Service` column, and the service
+picker in the header switches between them. **Template** downloads the currently loaded
+data as a CSV in the expected shape.
 
-The SLA card colour-codes risk: a timed SLA renders with a green glow, and a
-`slaRisk: 'none'` SLA renders with a red glow (see `src/flow/sampleService.ts`).
+Recognised headers (case-insensitive, common aliases accepted — see `COLUMN_ALIASES` in
+`src/data/parseServices.ts`):
+
+| Column | Required | Notes |
+| --- | --- | --- |
+| `Service` | yes | Parent service; groups the rows |
+| `Sub-service` | yes | Also `Service Offering`, `Offering` |
+| `Domain` | no | Shown as a chip on the parent card |
+| `Entitlement` | no | Also `Entitled Users`, `Audience` |
+| `Entitlement Note` | no | Small caption above the entitlement |
+| `Approvals` | no | Split on `;` `,` `\|` `>` `→`; empty ⇒ "Auto-approved". `Approval 1`, `Approval 2`, … columns also work |
+| `Fulfillment Type` | no | `WO`/`Work Order`, `SR`/`Service Request`, `INC`, `CHG`, or free text |
+| `Support Group` | no | Also `Assignment Group`, `Resolver Group` |
+| `Support Note` | no | e.g. `L2 · 24×5` |
+| `SLA` | no | Empty, `No SLA`, `N/A`, `-` ⇒ rendered as at-risk red |
 
 ## Layout of the code
 
 ```
 src/
-  App.tsx                     page shell (backdrop + title bar + canvas)
+  App.tsx                     page shell, spreadsheet state, service selection
   components/
     FlowCanvas.tsx            React Flow instance, node/edge type registry
-    GradientBackdrop.tsx      drifting blurred gradient blobs
-    LaneNode.tsx              swimlane band background + side label
-    StageNode.tsx             glassmorphism stage card
-    GlowEdge.tsx              glowing animated gradient edge
-    TitleBar.tsx              heading + Export / theme toggle placeholders
+    StageNode.tsx             stage card
+    FlowEdge.tsx              orthogonal step edge
+    PhaseBand.tsx             lifecycle phase background band
+    ColumnHeader.tsx          column caption
+    RowStripe.tsx             alternating row background
+    Legend.tsx                colour legend
+    TitleBar.tsx              heading, import/template/export, theme switcher
+    ThemeSwitcher.tsx         3-way theme control
+    GradientBackdrop.tsx      ambient background wash
+  data/
+    parseServices.ts          spreadsheet → Service[] parsing, CSV template
   flow/
-    sampleService.ts          the hardcoded sample flow (nodes, lanes, edges)
-    types.ts                  node/edge data types
+    layout.ts                 turns a Service into nodes + edges
+    icons.ts                  stage kind → lucide icon
+    sampleService.ts          bundled sample services
+    types.ts                  domain + node/edge data types
+  theme/
+    themes.ts                 theme token definitions
+    ThemeContext.tsx          theme provider / persistence
 ```
-
-To try a different sample, edit `src/flow/sampleService.ts` — positions are absolute
-canvas coordinates inside the two lane bands.

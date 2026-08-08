@@ -4,62 +4,73 @@ import ReactFlow, {
   BackgroundVariant,
   Controls,
   MiniMap,
-  type Edge,
+  Panel,
   type Node,
 } from 'reactflow';
-import { dividerNode, flowEdges, laneNodes, stageNodes } from '../flow/sampleService';
-import { GlowEdge } from './GlowEdge';
-import { LaneNode } from './LaneNode';
+import 'reactflow/dist/style.css';
+import { buildLayout } from '../flow/layout';
+import type { Service } from '../flow/types';
+import { ColumnHeader } from './ColumnHeader';
+import { FlowEdge } from './FlowEdge';
+import { Legend } from './Legend';
+import { PhaseBand } from './PhaseBand';
+import { RowStripe } from './RowStripe';
 import { StageNode } from './StageNode';
 
-function LaneDivider() {
-  return (
-    <div className="h-px w-full border-t border-dashed border-white/[0.14]" />
-  );
-}
-
-const nodeTypes = { stage: StageNode, lane: LaneNode, divider: LaneDivider };
-const edgeTypes = { glow: GlowEdge };
+const nodeTypes = {
+  stage: StageNode,
+  phaseBand: PhaseBand,
+  rowStripe: RowStripe,
+  columnHeader: ColumnHeader,
+  spacer: () => null,
+};
+const edgeTypes = { flow: FlowEdge };
 
 function minimapNodeColor(node: Node) {
   if (node.type === 'stage') {
-    return 'rgba(148,180,255,0.55)';
+    return 'var(--text-subtle)';
   }
-  return 'rgba(139,92,246,0.12)';
+  if (node.type === 'phaseBand') {
+    return 'var(--accent-soft)';
+  }
+  return 'transparent';
 }
 
-export function FlowCanvas() {
-  const nodes = useMemo<Node[]>(() => [...laneNodes, dividerNode, ...stageNodes], []);
-  const edges = useMemo<Edge[]>(() => flowEdges, []);
+export function FlowCanvas({ service }: { service: Service }) {
+  const layout = useMemo(() => buildLayout(service), [service]);
 
   return (
     <ReactFlow
-      defaultNodes={nodes}
-      defaultEdges={edges}
+      key={service.name}
+      defaultNodes={layout.nodes}
+      defaultEdges={layout.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       fitView
-      fitViewOptions={{ padding: 0.18 }}
-      minZoom={0.3}
-      maxZoom={1.8}
+      fitViewOptions={{ padding: 0.04 }}
+      minZoom={0.2}
+      maxZoom={2}
       proOptions={{ hideAttribution: true }}
       className="bg-transparent"
     >
       <Background
         variant={BackgroundVariant.Dots}
-        gap={36}
+        gap={28}
         size={1}
-        color="rgba(255,255,255,0.05)"
+        color="var(--grid-dot)"
       />
       <MiniMap
         pannable
         zoomable
         nodeColor={minimapNodeColor}
         nodeStrokeWidth={0}
-        maskColor="rgba(10,10,18,0.78)"
-        style={{ background: 'rgba(14,14,24,0.9)' }}
+        maskColor="rgba(0,0,0,0.25)"
+        style={{ background: 'var(--surface-raised)', width: 150, height: 96 }}
       />
       <Controls showInteractive={false} />
+      <Panel position="bottom-center">
+        <Legend />
+      </Panel>
     </ReactFlow>
   );
 }

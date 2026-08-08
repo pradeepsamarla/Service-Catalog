@@ -1,61 +1,45 @@
 import { motion } from 'framer-motion';
-import {
-  BadgeCheck,
-  ClipboardList,
-  Clock,
-  Layers,
-  ShieldCheck,
-  Users,
-  type LucideIcon,
-} from 'lucide-react';
 import { Handle, Position, type NodeProps } from 'reactflow';
-import type { Chip, StageKind, StageNodeData } from '../flow/types';
+import { stageIcon } from '../flow/icons';
+import type { Chip, StageNodeData } from '../flow/types';
 
-const ICONS: Record<StageKind, LucideIcon> = {
-  subservice: Layers,
-  entitlement: ShieldCheck,
-  approval: BadgeCheck,
-  fulfillment: ClipboardList,
-  supportGroup: Users,
-  sla: Clock,
-};
-
-const ACCENTS: Record<StageKind, string> = {
-  subservice: 'from-violet-400/80 to-fuchsia-400/60',
-  entitlement: 'from-sky-400/80 to-indigo-400/60',
-  approval: 'from-violet-400/80 to-sky-400/60',
-  fulfillment: 'from-teal-300/80 to-sky-400/60',
-  supportGroup: 'from-cyan-300/80 to-teal-400/60',
-  sla: 'from-emerald-300/80 to-teal-400/60',
-};
-
-function chipClasses(tone: Chip['tone']) {
+function chipStyle(tone: Chip['tone']) {
   if (tone === 'green') {
-    return 'border-emerald-300/30 bg-emerald-400/10 text-emerald-200';
+    return { background: 'var(--ok-soft)', color: 'var(--ok)', borderColor: 'var(--ok)' };
   }
   if (tone === 'red') {
-    return 'border-red-300/30 bg-red-400/10 text-red-200';
+    return {
+      background: 'var(--danger-soft)',
+      color: 'var(--danger)',
+      borderColor: 'var(--danger)',
+    };
   }
-  return 'border-white/10 bg-white/[0.06] text-slate-300';
+  return {
+    background: 'var(--chip-bg)',
+    color: 'var(--chip-text)',
+    borderColor: 'var(--border)',
+  };
 }
 
 export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
-  const Icon = ICONS[data.kind];
+  const Icon = stageIcon(data);
   const isSla = data.kind === 'sla';
-  const slaTimed = data.slaRisk !== 'none';
+  const slaMissing = data.slaRisk === 'none';
 
-  const glow = isSla
-    ? slaTimed
-      ? 'shadow-glow-green group-hover:shadow-glow-green'
-      : 'shadow-glow-red group-hover:shadow-glow-red'
-    : 'shadow-glow group-hover:shadow-glow-strong';
+  const accentBar = isSla
+    ? slaMissing
+      ? 'var(--danger)'
+      : 'var(--ok)'
+    : data.emphasis
+      ? 'var(--accent)'
+      : 'transparent';
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, ease: 'easeOut' }}
-      whileHover={{ y: -6, scale: 1.035 }}
+      transition={{ duration: 0.28, ease: 'easeOut' }}
+      whileHover={{ y: -3 }}
       className="group"
     >
       <Handle type="target" position={Position.Left} id="l" />
@@ -64,49 +48,63 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
       <Handle type="source" position={Position.Bottom} id="b" />
 
       <div
-        className={`relative w-[220px] rounded-2xl border border-hairline bg-glass px-5 py-4 backdrop-blur-[18px] transition-shadow duration-300 ${glow} ${
-          selected ? 'ring-1 ring-white/25' : ''
-        }`}
+        className="relative w-[200px] overflow-hidden rounded-lg px-3.5 py-3 transition-shadow duration-200"
+        style={{
+          background: data.muted ? 'var(--surface-muted)' : 'var(--surface)',
+          border: `1px solid ${
+            selected || data.emphasis ? 'var(--border-strong)' : 'var(--border)'
+          }`,
+          borderStyle: data.muted ? 'dashed' : 'solid',
+          boxShadow: 'var(--shadow-card)',
+        }}
       >
-        <div
-          className="pointer-events-none absolute inset-0 rounded-2xl opacity-60"
-          style={{
-            background:
-              'linear-gradient(160deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0) 45%)',
-          }}
+        <span
+          className="absolute inset-y-0 left-0 w-[3px]"
+          style={{ background: accentBar }}
         />
 
-        <div className="relative flex flex-col items-center gap-3 text-center">
-          <div
-            className={`flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-gradient-to-br ${ACCENTS[data.kind]} bg-opacity-20`}
+        <div className="flex items-start gap-2.5">
+          <span
+            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+            style={{
+              background: data.muted ? 'var(--chip-bg)' : 'var(--accent-soft)',
+              color: data.muted ? 'var(--text-subtle)' : 'var(--accent)',
+            }}
           >
-            <Icon className="h-5 w-5 text-white/90" strokeWidth={1.5} />
-          </div>
+            <Icon className="h-[15px] w-[15px]" strokeWidth={1.75} />
+          </span>
 
-          <div>
-            <div className="text-[13px] font-semibold tracking-wide text-white">
-              {data.title}
-            </div>
+          <div className="min-w-0">
             {data.subtitle ? (
-              <div className="mt-1 text-[11px] uppercase tracking-[0.14em] text-slate-400">
+              <div
+                className="text-[9.5px] font-semibold uppercase tracking-[0.14em]"
+                style={{ color: 'var(--text-subtle)' }}
+              >
                 {data.subtitle}
               </div>
             ) : null}
-          </div>
-
-          {data.chips?.length ? (
-            <div className="flex flex-wrap justify-center gap-1.5">
-              {data.chips.map((chip) => (
-                <span
-                  key={chip.label}
-                  className={`rounded-full border px-2.5 py-1 text-[10.5px] font-medium ${chipClasses(chip.tone)}`}
-                >
-                  {chip.label}
-                </span>
-              ))}
+            <div
+              className="mt-0.5 text-[12.5px] font-semibold leading-snug"
+              style={{ color: data.muted ? 'var(--text-muted)' : 'var(--text)' }}
+            >
+              {data.title}
             </div>
-          ) : null}
+          </div>
         </div>
+
+        {data.chips?.length ? (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {data.chips.map((chip) => (
+              <span
+                key={chip.label}
+                className="rounded border px-1.5 py-[2px] text-[9.5px] font-medium leading-none"
+                style={chipStyle(chip.tone)}
+              >
+                {chip.label}
+              </span>
+            ))}
+          </div>
+        ) : null}
       </div>
     </motion.div>
   );

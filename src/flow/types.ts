@@ -1,4 +1,5 @@
 export type StageKind =
+  | 'service'
   | 'subservice'
   | 'entitlement'
   | 'approval'
@@ -19,13 +20,46 @@ export type StageNodeData = {
   subtitle?: string;
   chips?: Chip[];
   slaRisk?: SlaRisk;
+  muted?: boolean;
+  emphasis?: boolean;
+  icon?: 'workOrder' | 'serviceRequest';
 };
 
-export type LaneNodeData = {
+export type PhaseBandData = {
   label: string;
-  accent: 'violet' | 'teal';
+  accent: 'request' | 'intake' | 'fulfillment';
 };
 
-export type GlowEdgeData = {
+export type RowStripeData = {
+  index: number;
+};
+
+export type ColumnHeaderData = {
+  label: string;
+};
+
+export type FlowEdgeData = {
   hero?: boolean;
+  muted?: boolean;
+  label?: string;
+};
+
+export type SubService = {
+  id: string;
+  name: string;
+  requestType: string;
+  entitlement: string;
+  entitlementNote?: string;
+  approvals: string[];
+  fulfillmentType: string;
+  fulfillmentCode: string;
+  supportGroup: string;
+  supportNote?: string;
+  sla: { label: string; risk: SlaRisk };
+};
+
+export type Service = {
+  name: string;
+  domain: string;
+  subServices: SubService[];
 };
