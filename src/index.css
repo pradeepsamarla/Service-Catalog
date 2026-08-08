@@ -1,0 +1,117 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-canvas text-slate-100 antialiased;
+    margin: 0;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply rounded-2xl border border-hairline bg-glass backdrop-blur-[18px];
+  }
+}
+
+/* Drifting gradient blobs */
+@keyframes drift-a {
+  0% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(8%, 6%, 0) scale(1.15);
+  }
+  100% {
+    transform: translate3d(-6%, -4%, 0) scale(1);
+  }
+}
+
+@keyframes drift-b {
+  0% {
+    transform: translate3d(5%, 3%, 0) scale(1.1);
+  }
+  50% {
+    transform: translate3d(-7%, -6%, 0) scale(0.95);
+  }
+  100% {
+    transform: translate3d(5%, 3%, 0) scale(1.1);
+  }
+}
+
+.blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(120px);
+  will-change: transform;
+}
+
+.blob-a {
+  animation: drift-a 26s ease-in-out infinite;
+}
+
+.blob-b {
+  animation: drift-b 34s ease-in-out infinite;
+}
+
+/* React Flow overrides: no default node chrome */
+.react-flow__node {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  font-size: inherit;
+  color: inherit;
+  width: auto;
+}
+
+.react-flow__node-lane {
+  cursor: default;
+}
+
+.react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__controls-button {
+  background: rgba(18, 18, 30, 0.8);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  fill: #e2e8f0;
+}
+
+.react-flow__controls-button:hover {
+  background: rgba(45, 45, 70, 0.9);
+}
+
+.react-flow__controls,
+.react-flow__minimap {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.8);
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+.edge-flow {
+  stroke-dasharray: 6 8;
+  animation: dash-flow 0.9s linear infinite;
+}
