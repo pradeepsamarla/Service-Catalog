@@ -48,7 +48,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
       <Handle type="source" position={Position.Bottom} id="b" />
 
       <div
-        className="relative w-[200px] overflow-hidden rounded-lg px-3.5 py-3 transition-shadow duration-200"
+        className="relative w-[200px] overflow-hidden rounded-[10px] px-3.5 py-3 transition-shadow duration-200"
         style={{
           background: data.muted ? 'var(--surface-muted)' : 'var(--surface)',
           border: `1px solid ${
@@ -65,13 +65,13 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
 
         <div className="flex items-start gap-2.5">
           <span
-            className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md"
+            className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
             style={{
               background: data.muted ? 'var(--chip-bg)' : 'var(--accent-soft)',
               color: data.muted ? 'var(--text-subtle)' : 'var(--accent)',
             }}
           >
-            <Icon className="h-[15px] w-[15px]" strokeWidth={1.75} />
+            <Icon className="h-4 w-4" strokeWidth={1.9} />
           </span>
 
           <div className="min-w-0">
@@ -97,7 +97,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
             {data.chips.map((chip) => (
               <span
                 key={chip.label}
-                className="rounded border px-1.5 py-[2px] text-[9.5px] font-medium leading-none"
+                className="rounded-full border px-2 py-[3px] text-[9.5px] font-medium leading-none"
                 style={chipStyle(chip.tone)}
               >
                 {chip.label}

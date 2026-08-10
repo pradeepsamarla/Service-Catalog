@@ -36,6 +36,7 @@ export type RowStripeData = {
 
 export type ColumnHeaderData = {
   label: string;
+  step?: number;
 };
 
 export type FlowEdgeData = {

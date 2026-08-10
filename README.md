@@ -67,9 +67,9 @@ Three themes are switchable from the top-right control and persisted in
 
 | Theme | Id | Look |
 | --- | --- | --- |
-| Graphite dark | `dark` | Enterprise dark, graphite surfaces, restrained blue accent |
-| Enterprise light | `light` | White cards, neutral greys, blue accent |
-| Slate blue | `slate` | Mid-tone navy dashboard style |
+| Corporate light (default) | `light` | Navy header bar, white cards, blue accent — matches the corporate dashboard reference |
+| Corporate dark | `dark` | Same structure on navy-black surfaces |
+| Slate blue | `slate` | Same structure on a mid-navy canvas |
 
 Every colour is a CSS variable defined in `src/theme/themes.ts`, so adding a fourth
 theme means adding one entry to `THEMES`.

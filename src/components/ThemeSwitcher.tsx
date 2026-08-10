@@ -10,7 +10,10 @@ export function ThemeSwitcher() {
   return (
     <div
       className="flex items-center gap-0.5 rounded-md p-0.5"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+      style={{
+        background: 'var(--header-control)',
+        border: '1px solid var(--header-border)',
+      }}
     >
       {THEMES.map((entry) => {
         const Icon = ICONS[entry.id as ThemeId];
@@ -25,8 +28,8 @@ export function ThemeSwitcher() {
             onClick={() => setTheme(entry.id)}
             className="flex h-7 w-7 items-center justify-center rounded"
             style={{
-              background: active ? 'var(--accent-soft)' : 'transparent',
-              color: active ? 'var(--accent)' : 'var(--text-subtle)',
+              background: active ? 'var(--header-control-active)' : 'transparent',
+              color: active ? 'var(--header-text)' : 'var(--header-muted)',
             }}
           >
             <Icon className="h-3.5 w-3.5" strokeWidth={1.75} />

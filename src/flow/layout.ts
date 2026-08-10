@@ -82,7 +82,7 @@ export function buildLayout(service: Service): Layout {
       id: `col-${index}`,
       type: 'columnHeader',
       position: { x: COL_X[index], y: HEADER_Y },
-      data: { label } satisfies ColumnHeaderData,
+      data: { label, step: index > 0 ? index : undefined } satisfies ColumnHeaderData,
       style: { width: CARD_W },
       draggable: false,
       selectable: false,
