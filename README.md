@@ -1,11 +1,12 @@
 # ITSM Service Flow — Visual Prototype
 
-A standalone prototype that renders an **entire parent service and its sub-services** as
-an enterprise service-flow diagram: one swimlane row per sub-service, moving left to
-right through the service lifecycle columns.
+A standalone prototype for browsing an ITSM service catalog: search a **Service**, see the
+service details plus its **sub-services**, then open a sub-service to get its end-to-end
+flow (Service Request → entitlement → approval levels → child tickets → SLA), one box per
+record.
 
-Data comes from a spreadsheet (`.xlsx` / `.csv`) at runtime — sample data is bundled so
-the app renders something immediately.
+Data comes from a normalised multi-sheet workbook (`.xlsx`) at runtime — sample data is
+bundled so the app renders something immediately.
 
 ## Stack
 
@@ -76,65 +77,64 @@ theme means adding one entry to `THEMES`.
 
 ## What's on screen
 
-- **Phase bands** — `Request`, `Intake · qualification`, `Fulfillment · resolution`
-  grouping the lifecycle columns.
-- **Columns** — Service, Sub-service, Entitlement, Approval flow, Fulfillment, Support
-  group, SLA.
-- **Rows** — one alternating-stripe swimlane per sub-service, fanning out from the
-  parent-service card on the left.
-- **Cards** — relevance-specific icon per stage (parent service, request form,
-  entitlement, approval stamp, work order vs. service request, support headset, SLA
-  timer), an accent bar for emphasis/SLA state, and detail chips (approval levels,
-  fulfilment code, SLA state).
-- **Orthogonal connectors** — right-angle step edges with arrow heads; dashed and dimmed
-  when a stage is not applicable (e.g. auto-approved).
-- **Canvas** — pan/zoom, MiniMap, Controls, dot grid, legend.
+- **Left panel** — collapsible to an icon rail; search matches service *and* sub-service
+  names; each service expands to its sub-services.
+- **Service view** — selecting a service shows its card (id, domain, owner name / PR ID /
+  email, description) and a grid of sub-service tiles summarising approval levels, child
+  tickets (parallel or sequence) and SLA.
+- **Sub-service flow** — breadcrumb + sub-service switcher above the canvas, then phase
+  bands (`Request`, `Intake · qualification`, `Fulfillment · resolution`) over numbered
+  columns.
+- **One box per record** — three approval rows render as three chained approval boxes,
+  `PARALLEL` assignments stack in a single split column, `SEQUENCE` assignments become
+  ordered steps. No approvals ⇒ a muted "Auto-approved" box; no SLA row ⇒ a red
+  "No SLA defined" box.
+- **Canvas** — orthogonal connectors, pan/zoom, MiniMap, Controls, legend.
 
-## Importing a spreadsheet
+## Importing a workbook
 
-Click **Import Excel** and pick an `.xlsx`, `.xls` or `.csv` file. Every row is one
-sub-service; rows are grouped into services by the `Service` column, and the service
-picker in the header switches between them. **Template** downloads the currently loaded
-data as a CSV in the expected shape.
+Click **Import workbook** and pick an `.xlsx` file; **Template** downloads the expected
+workbook. Sheets (parsed by `src/data/parseWorkbook.ts`, names/headers case- and
+separator-insensitive):
 
-Recognised headers (case-insensitive, common aliases accepted — see `COLUMN_ALIASES` in
-`src/data/parseServices.ts`):
-
-| Column | Required | Notes |
+| Sheet | Grain | Columns |
 | --- | --- | --- |
-| `Service` | yes | Parent service; groups the rows |
-| `Sub-service` | yes | Also `Service Offering`, `Offering` |
-| `Domain` | no | Shown as a chip on the parent card |
-| `Entitlement` | no | Also `Entitled Users`, `Audience` |
-| `Entitlement Note` | no | Small caption above the entitlement |
-| `Approvals` | no | Split on `;` `,` `\|` `>` `→`; empty ⇒ "Auto-approved". `Approval 1`, `Approval 2`, … columns also work |
-| `Fulfillment Type` | no | `WO`/`Work Order`, `SR`/`Service Request`, `INC`, `CHG`, or free text |
-| `Support Group` | no | Also `Assignment Group`, `Resolver Group` |
-| `Support Note` | no | e.g. `L2 · 24×5` |
-| `SLA` | no | Empty, `No SLA`, `N/A`, `-` ⇒ rendered as at-risk red |
+| `Services` | one parent service | `service_id, service_name, domain, owner_name, owner_pr_id, owner_email, description` |
+| `SubServices` | one Service Request definition | `sub_service_id, service_id, sub_service_name, request_type, active` |
+| `Entitlements` | one entitlement rule | `entitlement_id, sub_service_id, entitlement, entitlement_note` |
+| `SLAs` | one SLA per sub-service | `sla_id, sub_service_id, sla_target, sla_unit` |
+| `Approvals` | one approval level | `sub_service_id, level, approver_type, approver` |
+| `Assignments` | one child ticket (WO/INC) | `sub_service_id, seq, support_group, ticket_type, execution_mode` (`PARALLEL` \| `SEQUENCE`) |
+| `SupportGroups` | one support group | `support_group_id, support_group, tier, coverage, email` |
+| `Attributes` | one key/value extra | `entity_type, entity_id, key, value, data_type` |
+
+The Service Request is always the parent; every `Assignments` row is a child ticket under
+it. No `Approvals` rows ⇒ auto-approved; no `SLAs` row ⇒ "No SLA defined".
 
 ## Layout of the code
 
 ```
 src/
-  App.tsx                     page shell, spreadsheet state, service selection
+  App.tsx                     page shell, catalog state, service/sub-service selection
   components/
+    Sidebar.tsx               collapsible catalog panel: search + expandable services
+    ServiceOverview.tsx       service details + sub-service tiles
+    ServiceContextBar.tsx     breadcrumb + sub-service switcher above the flow
     FlowCanvas.tsx            React Flow instance, node/edge type registry
     StageNode.tsx             stage card
     FlowEdge.tsx              orthogonal step edge
     PhaseBand.tsx             lifecycle phase background band
-    ColumnHeader.tsx          column caption
-    RowStripe.tsx             alternating row background
+    ColumnHeader.tsx          numbered column caption
     Legend.tsx                colour legend
     TitleBar.tsx              heading, import/template/export, theme switcher
     ThemeSwitcher.tsx         3-way theme control
     GradientBackdrop.tsx      ambient background wash
   data/
-    parseServices.ts          spreadsheet → Service[] parsing, CSV template
+    parseWorkbook.ts          multi-sheet workbook → Service[]
   flow/
-    layout.ts                 turns a Service into nodes + edges
+    layout.ts                 turns a SubService into nodes + edges
     icons.ts                  stage kind → lucide icon
-    sampleService.ts          bundled sample services
+    sampleCatalog.ts          bundled sample catalog
     types.ts                  domain + node/edge data types
   theme/
     themes.ts                 theme token definitions

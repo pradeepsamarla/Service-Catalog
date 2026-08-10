@@ -1,13 +1,13 @@
 export type StageKind =
-  | 'service'
-  | 'subservice'
+  | 'request'
   | 'entitlement'
   | 'approval'
-  | 'fulfillment'
-  | 'supportGroup'
+  | 'ticket'
   | 'sla';
 
 export type SlaRisk = 'timed' | 'none';
+
+export type ExecutionMode = 'PARALLEL' | 'SEQUENCE';
 
 export type Chip = {
   label: string;
@@ -22,16 +22,12 @@ export type StageNodeData = {
   slaRisk?: SlaRisk;
   muted?: boolean;
   emphasis?: boolean;
-  icon?: 'workOrder' | 'serviceRequest';
+  ticketType?: string;
 };
 
 export type PhaseBandData = {
   label: string;
   accent: 'request' | 'intake' | 'fulfillment';
-};
-
-export type RowStripeData = {
-  index: number;
 };
 
 export type ColumnHeaderData = {
@@ -40,27 +36,59 @@ export type ColumnHeaderData = {
 };
 
 export type FlowEdgeData = {
-  hero?: boolean;
   muted?: boolean;
+  hero?: boolean;
   label?: string;
+  dashed?: boolean;
+};
+
+export type Entitlement = {
+  id: string;
+  entitlement: string;
+  note?: string;
+};
+
+export type ApprovalStep = {
+  level: number;
+  approverType: string;
+  approver: string;
+};
+
+export type Assignment = {
+  seq: number;
+  supportGroup: string;
+  ticketType: string;
+  executionMode: ExecutionMode;
+  tier?: string;
+  coverage?: string;
+};
+
+export type Sla = {
+  target: number | null;
+  unit: string;
+  label: string;
+  risk: SlaRisk;
 };
 
 export type SubService = {
   id: string;
   name: string;
   requestType: string;
-  entitlement: string;
-  entitlementNote?: string;
-  approvals: string[];
-  fulfillmentType: string;
-  fulfillmentCode: string;
-  supportGroup: string;
-  supportNote?: string;
-  sla: { label: string; risk: SlaRisk };
+  active: boolean;
+  entitlements: Entitlement[];
+  approvals: ApprovalStep[];
+  assignments: Assignment[];
+  sla: Sla;
+  attributes: Array<{ key: string; value: string }>;
 };
 
 export type Service = {
+  id: string;
   name: string;
   domain: string;
+  ownerName?: string;
+  ownerPrId?: string;
+  ownerEmail?: string;
+  description?: string;
   subServices: SubService[];
 };

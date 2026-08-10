@@ -3,7 +3,7 @@ const ITEMS = [
   { label: 'Fulfillment · resolution', color: 'var(--band-fulfillment-text)' },
   { label: 'SLA defined', color: 'var(--ok)' },
   { label: 'No SLA', color: 'var(--danger)' },
-  { label: 'No approval required', color: 'var(--text-subtle)' },
+  { label: 'Not required', color: 'var(--text-subtle)' },
 ];
 
 export function Legend() {

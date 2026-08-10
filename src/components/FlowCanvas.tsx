@@ -9,20 +9,17 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { buildLayout } from '../flow/layout';
-import type { Service } from '../flow/types';
+import type { SubService } from '../flow/types';
 import { ColumnHeader } from './ColumnHeader';
 import { FlowEdge } from './FlowEdge';
 import { Legend } from './Legend';
 import { PhaseBand } from './PhaseBand';
-import { RowStripe } from './RowStripe';
 import { StageNode } from './StageNode';
 
 const nodeTypes = {
   stage: StageNode,
   phaseBand: PhaseBand,
-  rowStripe: RowStripe,
   columnHeader: ColumnHeader,
-  spacer: () => null,
 };
 const edgeTypes = { flow: FlowEdge };
 
@@ -36,18 +33,18 @@ function minimapNodeColor(node: Node) {
   return 'transparent';
 }
 
-export function FlowCanvas({ service }: { service: Service }) {
-  const layout = useMemo(() => buildLayout(service), [service]);
+export function FlowCanvas({ subService }: { subService: SubService }) {
+  const layout = useMemo(() => buildLayout(subService), [subService]);
 
   return (
     <ReactFlow
-      key={service.name}
+      key={subService.id}
       defaultNodes={layout.nodes}
       defaultEdges={layout.edges}
       nodeTypes={nodeTypes}
       edgeTypes={edgeTypes}
       fitView
-      fitViewOptions={{ padding: 0.04 }}
+      fitViewOptions={{ padding: 0.06 }}
       minZoom={0.2}
       maxZoom={2}
       proOptions={{ hideAttribution: true }}
@@ -64,7 +61,7 @@ export function FlowCanvas({ service }: { service: Service }) {
         zoomable
         nodeColor={minimapNodeColor}
         nodeStrokeWidth={0}
-        maskColor="rgba(0,0,0,0.25)"
+        maskColor="rgba(0,0,0,0.2)"
         style={{ background: 'var(--surface-raised)', width: 150, height: 96 }}
       />
       <Controls showInteractive={false} />

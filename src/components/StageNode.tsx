@@ -48,7 +48,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
       <Handle type="source" position={Position.Bottom} id="b" />
 
       <div
-        className="relative w-[200px] overflow-hidden rounded-[10px] px-3.5 py-3 transition-shadow duration-200"
+        className="relative flex h-[96px] w-[216px] flex-col justify-center overflow-hidden rounded-[10px] px-3.5 py-3 transition-shadow duration-200"
         style={{
           background: data.muted ? 'var(--surface-muted)' : 'var(--surface)',
           border: `1px solid ${

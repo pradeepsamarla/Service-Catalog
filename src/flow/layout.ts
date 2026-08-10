@@ -3,193 +3,186 @@ import type {
   ColumnHeaderData,
   FlowEdgeData,
   PhaseBandData,
-  RowStripeData,
-  Service,
   StageNodeData,
+  SubService,
 } from './types';
 
-export const CARD_W = 200;
-const COL_X = [24, 292, 560, 828, 1096, 1364, 1632];
-const CANVAS_W = COL_X[6] + CARD_W + 24;
-
-const ROW_TOP = 116;
-const ROW_H = 168;
-const CARD_OFFSET_Y = 24;
-const HEADER_Y = 74;
+export const CARD_W = 216;
+const CARD_H = 96;
+const COL_GAP = 72;
+const ROW_GAP = 26;
+const X0 = 28;
+const HEADER_Y = 66;
+const CARD_TOP = 118;
 const BAND_TOP = 16;
 
-const COLUMNS = [
-  'Service',
-  'Sub-service',
-  'Entitlement',
-  'Approval flow',
-  'Fulfillment',
-  'Support group',
-  'SLA',
-];
-
-const ordinals = ['1', '2', '3', '4', '5', '6'];
+type Column = {
+  label: string;
+  phase: PhaseBandData['accent'];
+  nodes: Array<{ id: string; data: StageNodeData }>;
+};
 
 type Layout = {
   nodes: Node[];
   edges: Edge<FlowEdgeData>[];
 };
 
-export function buildLayout(service: Service): Layout {
-  const rows = service.subServices.length;
-  const gridHeight = rows * ROW_H;
-  const bandHeight = ROW_TOP - BAND_TOP + gridHeight + 8;
+function buildColumns(sub: SubService): Column[] {
+  const columns: Column[] = [];
 
-  const nodes: Node[] = [];
-  const edges: Edge<FlowEdgeData>[] = [];
+  columns.push({
+    label: sub.requestType,
+    phase: 'request',
+    nodes: [
+      {
+        id: 'request',
+        data: {
+          kind: 'request',
+          subtitle: 'Parent request',
+          title: sub.name,
+          chips: [{ label: sub.id }],
+          emphasis: true,
+        },
+      },
+    ],
+  });
 
-  const bands: Array<{
-    id: string;
-    from: number;
-    to: number;
-    label: string;
-    accent: PhaseBandData['accent'];
-  }> = [
-    { id: 'band-request', from: 1, to: 1, label: 'Request', accent: 'request' },
-    { id: 'band-intake', from: 2, to: 3, label: 'Intake · qualification', accent: 'intake' },
-    {
-      id: 'band-fulfillment',
-      from: 4,
-      to: 6,
-      label: 'Fulfillment · resolution',
-      accent: 'fulfillment',
-    },
-  ];
+  columns.push({
+    label: 'Entitlement',
+    phase: 'intake',
+    nodes: sub.entitlements.length
+      ? sub.entitlements.map((entitlement, index) => ({
+          id: `ent-${index}`,
+          data: {
+            kind: 'entitlement',
+            subtitle: entitlement.note ?? 'Entitled requesters',
+            title: entitlement.entitlement,
+          } satisfies StageNodeData,
+        }))
+      : [
+          {
+            id: 'ent-none',
+            data: {
+              kind: 'entitlement',
+              subtitle: 'No restriction',
+              title: 'All requesters',
+              muted: true,
+            },
+          },
+        ],
+  });
 
-  for (const band of bands) {
-    const x = COL_X[band.from] - 22;
-    const width = COL_X[band.to] + CARD_W + 22 - x;
-    nodes.push({
-      id: band.id,
-      type: 'phaseBand',
-      position: { x, y: BAND_TOP },
-      data: { label: band.label, accent: band.accent } satisfies PhaseBandData,
-      style: { width, height: bandHeight },
-      draggable: false,
-      selectable: false,
-      connectable: false,
-      zIndex: -3,
+  if (sub.approvals.length) {
+    sub.approvals.forEach((approval, index) => {
+      columns.push({
+        label: `Approval L${approval.level}`,
+        phase: 'intake',
+        nodes: [
+          {
+            id: `appr-${index}`,
+            data: {
+              kind: 'approval',
+              subtitle: approval.approverType,
+              title: approval.approver,
+              chips: [{ label: `Level ${approval.level}` }],
+            },
+          },
+        ],
+      });
+    });
+  } else {
+    columns.push({
+      label: 'Approval',
+      phase: 'intake',
+      nodes: [
+        {
+          id: 'appr-none',
+          data: {
+            kind: 'approval',
+            subtitle: 'No approval',
+            title: 'Auto-approved',
+            muted: true,
+          },
+        },
+      ],
     });
   }
 
-  COLUMNS.forEach((label, index) => {
-    nodes.push({
-      id: `col-${index}`,
-      type: 'columnHeader',
-      position: { x: COL_X[index], y: HEADER_Y },
-      data: { label, step: index > 0 ? index : undefined } satisfies ColumnHeaderData,
-      style: { width: CARD_W },
-      draggable: false,
-      selectable: false,
-      connectable: false,
-      zIndex: -2,
-    });
-  });
+  const sequential = sub.assignments.filter((item) => item.executionMode === 'SEQUENCE');
+  const parallel = sub.assignments.filter((item) => item.executionMode !== 'SEQUENCE');
 
-  service.subServices.forEach((_, index) => {
-    nodes.push({
-      id: `row-${index}`,
-      type: 'rowStripe',
-      position: { x: COL_X[1] - 22, y: ROW_TOP + index * ROW_H - 6 },
-      data: { index } satisfies RowStripeData,
-      style: { width: CANVAS_W - COL_X[1] + 22 - 24, height: ROW_H - 8 },
-      draggable: false,
-      selectable: false,
-      connectable: false,
-      zIndex: -2,
+  if (parallel.length) {
+    columns.push({
+      label: parallel.length > 1 ? 'Child tickets · parallel' : 'Child ticket',
+      phase: 'fulfillment',
+      nodes: parallel.map((assignment, index) => ({
+        id: `par-${index}`,
+        data: {
+          kind: 'ticket',
+          subtitle: assignment.ticketType,
+          title: assignment.supportGroup,
+          ticketType: assignment.ticketType,
+          chips: [
+            { label: [assignment.tier, assignment.coverage].filter(Boolean).join(' · ') || 'Support group' },
+          ],
+        } satisfies StageNodeData,
+      })),
     });
-  });
+  }
 
-  nodes.push({
-    id: 'service',
-    type: 'stage',
-    position: { x: COL_X[0], y: ROW_TOP + gridHeight / 2 - 64 },
-    data: {
-      kind: 'service',
-      title: service.name,
-      subtitle: 'Parent service',
-      chips: [
-        { label: service.domain },
-        { label: `${rows} sub-service${rows > 1 ? 's' : ''}` },
+  sequential.forEach((assignment, index) => {
+    columns.push({
+      label: `Child ticket · step ${index + 1}`,
+      phase: 'fulfillment',
+      nodes: [
+        {
+          id: `seq-${index}`,
+          data: {
+            kind: 'ticket',
+            subtitle: assignment.ticketType,
+            title: assignment.supportGroup,
+            ticketType: assignment.ticketType,
+            chips: [
+              {
+                label:
+                  [assignment.tier, assignment.coverage].filter(Boolean).join(' · ') ||
+                  'Support group',
+              },
+            ],
+          },
+        },
       ],
-      emphasis: true,
-    } satisfies StageNodeData,
+    });
   });
 
-  service.subServices.forEach((sub, index) => {
-    const y = ROW_TOP + index * ROW_H + CARD_OFFSET_Y;
-    const hasApproval = sub.approvals.length > 0;
+  if (!sub.assignments.length) {
+    columns.push({
+      label: 'Child ticket',
+      phase: 'fulfillment',
+      nodes: [
+        {
+          id: 'tkt-none',
+          data: {
+            kind: 'ticket',
+            subtitle: 'No assignment',
+            title: 'Unassigned',
+            muted: true,
+          },
+        },
+      ],
+    });
+  }
 
-    const stages: Array<{ id: string; column: number; data: StageNodeData }> = [
+  columns.push({
+    label: 'SLA',
+    phase: 'fulfillment',
+    nodes: [
       {
-        id: `${sub.id}-sub`,
-        column: 1,
-        data: {
-          kind: 'subservice',
-          title: sub.name,
-          subtitle: sub.requestType,
-        },
-      },
-      {
-        id: `${sub.id}-ent`,
-        column: 2,
-        data: {
-          kind: 'entitlement',
-          title: sub.entitlement,
-          subtitle: sub.entitlementNote ?? 'Entitled requesters',
-        },
-      },
-      {
-        id: `${sub.id}-appr`,
-        column: 3,
-        data: hasApproval
-          ? {
-              kind: 'approval',
-              subtitle: 'Approval flow',
-              title: `${sub.approvals.length} level${sub.approvals.length > 1 ? 's' : ''}`,
-              chips: sub.approvals.map((approver, level) => ({
-                label: `${ordinals[level]}. ${approver}`,
-              })),
-            }
-          : {
-              kind: 'approval',
-              subtitle: 'No approval',
-              title: 'Auto-approved',
-              muted: true,
-            },
-      },
-      {
-        id: `${sub.id}-ful`,
-        column: 4,
-        data: {
-          kind: 'fulfillment',
-          subtitle: 'Fulfillment type',
-          title: sub.fulfillmentType,
-          chips: [{ label: sub.fulfillmentCode }],
-          icon: /work order/i.test(sub.fulfillmentType) ? 'workOrder' : 'serviceRequest',
-        },
-      },
-      {
-        id: `${sub.id}-sup`,
-        column: 5,
-        data: {
-          kind: 'supportGroup',
-          subtitle: sub.supportNote ?? 'Support group',
-          title: sub.supportGroup,
-        },
-      },
-      {
-        id: `${sub.id}-sla`,
-        column: 6,
+        id: 'sla',
         data: {
           kind: 'sla',
           subtitle: 'Resolution target',
-          title: sub.sla.risk === 'none' ? 'No SLA defined' : sub.sla.label,
+          title: sub.sla.label,
           slaRisk: sub.sla.risk,
           chips: [
             sub.sla.risk === 'none'
@@ -198,55 +191,119 @@ export function buildLayout(service: Service): Layout {
           ],
         },
       },
-    ];
+    ],
+  });
 
-    for (const stage of stages) {
+  return columns;
+}
+
+export function buildLayout(sub: SubService): Layout {
+  const columns = buildColumns(sub);
+  const nodes: Node[] = [];
+  const edges: Edge<FlowEdgeData>[] = [];
+
+  const tallest = Math.max(...columns.map((column) => column.nodes.length));
+  const gridHeight = tallest * CARD_H + (tallest - 1) * ROW_GAP;
+  const centerY = CARD_TOP + gridHeight / 2;
+  const bandHeight = gridHeight + (CARD_TOP - BAND_TOP) + 24;
+
+  const columnX = columns.map((_, index) => X0 + index * (CARD_W + COL_GAP));
+
+  let bandStart = 0;
+  columns.forEach((column, index) => {
+    const isLast = index === columns.length - 1;
+    const next = columns[index + 1];
+    if (isLast || next.phase !== column.phase) {
+      const x = columnX[bandStart] - 22;
+      const width = columnX[index] + CARD_W + 22 - x;
       nodes.push({
-        id: stage.id,
-        type: 'stage',
-        position: { x: COL_X[stage.column], y },
-        data: stage.data,
+        id: `band-${column.phase}-${bandStart}`,
+        type: 'phaseBand',
+        position: { x, y: BAND_TOP },
+        data: {
+          label:
+            column.phase === 'request'
+              ? 'Request'
+              : column.phase === 'intake'
+                ? 'Intake · qualification'
+                : 'Fulfillment · resolution',
+          accent: column.phase,
+        } satisfies PhaseBandData,
+        style: { width, height: bandHeight },
+        draggable: false,
+        selectable: false,
+        connectable: false,
+        zIndex: -3,
       });
+      bandStart = index + 1;
     }
+  });
 
-    edges.push({
-      id: `e-service-${sub.id}`,
-      source: 'service',
-      sourceHandle: 'r',
-      target: `${sub.id}-sub`,
-      targetHandle: 'l',
-      type: 'flow',
-      markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
-      data: {},
+  columns.forEach((column, index) => {
+    nodes.push({
+      id: `col-${index}`,
+      type: 'columnHeader',
+      position: { x: columnX[index], y: HEADER_Y },
+      data: { label: column.label, step: index + 1 } satisfies ColumnHeaderData,
+      style: { width: CARD_W },
+      draggable: false,
+      selectable: false,
+      connectable: false,
+      zIndex: -2,
     });
 
-    for (let i = 0; i < stages.length - 1; i += 1) {
-      const from = stages[i];
-      const to = stages[i + 1];
+    const count = column.nodes.length;
+    const columnHeight = count * CARD_H + (count - 1) * ROW_GAP;
+    const top = centerY - columnHeight / 2;
+
+    column.nodes.forEach((entry, row) => {
+      nodes.push({
+        id: entry.id,
+        type: 'stage',
+        position: { x: columnX[index], y: top + row * (CARD_H + ROW_GAP) },
+        data: entry.data,
+      });
+    });
+  });
+
+  for (let index = 0; index < columns.length - 1; index += 1) {
+    const from = columns[index].nodes;
+    const to = columns[index + 1].nodes;
+    const pairs: Array<[string, string]> = [];
+
+    if (from.length === 1 || to.length === 1) {
+      for (const source of from) {
+        for (const target of to) {
+          pairs.push([source.id, target.id]);
+        }
+      }
+    } else {
+      const length = Math.max(from.length, to.length);
+      for (let i = 0; i < length; i += 1) {
+        pairs.push([
+          from[Math.min(i, from.length - 1)].id,
+          to[Math.min(i, to.length - 1)].id,
+        ]);
+      }
+    }
+
+    for (const [source, target] of pairs) {
       edges.push({
-        id: `e-${from.id}-${to.id}`,
-        source: from.id,
+        id: `e-${source}-${target}`,
+        source,
         sourceHandle: 'r',
-        target: to.id,
+        target,
         targetHandle: 'l',
         type: 'flow',
         markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
-        data: { muted: Boolean(from.data.muted || to.data.muted) },
+        data: {
+          muted:
+            columns[index].nodes.some((entry) => entry.id === source && entry.data.muted) ||
+            columns[index + 1].nodes.some((entry) => entry.id === target && entry.data.muted),
+        },
       });
     }
-  });
-
-  nodes.push({
-    id: 'spacer',
-    type: 'spacer',
-    position: { x: CANVAS_W - 8, y: ROW_TOP + gridHeight - 12 },
-    data: {},
-    style: { width: 180, height: 120 },
-    draggable: false,
-    selectable: false,
-    connectable: false,
-    zIndex: -4,
-  });
+  }
 
   return { nodes, edges };
 }
