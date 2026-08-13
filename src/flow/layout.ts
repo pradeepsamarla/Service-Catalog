@@ -111,6 +111,22 @@ function buildColumns(sub: SubService): Column[] {
 
   if (sub.approvals.length) {
     sub.approvals.forEach((approval, index) => {
+      if (approval.condition) {
+        columns.push({
+          label: `Approval L${approval.level} condition`,
+          phase: 'intake',
+          nodes: [
+            {
+              id: `appr-gate-${index}`,
+              data: {
+                kind: 'decision',
+                title: approval.condition,
+                subtitle: 'Conditional approval',
+              },
+            },
+          ],
+        });
+      }
       columns.push({
         label: `Approval L${approval.level}`,
         phase: 'intake',
@@ -121,7 +137,10 @@ function buildColumns(sub: SubService): Column[] {
               kind: 'approval',
               subtitle: approval.approverType,
               title: approval.approver,
-              chips: [{ label: `Level ${approval.level}` }],
+              chips: [
+                { label: `Level ${approval.level}` },
+                ...(approval.condition ? [{ label: 'Conditional' }] : []),
+              ],
             },
           },
         ],
@@ -270,7 +289,8 @@ export function buildLayout(sub: SubService): Layout {
   );
   const gridHeight = Math.max(...columnHeights);
   const centerY = CARD_TOP + gridHeight / 2;
-  const bandHeight = gridHeight + (CARD_TOP - BAND_TOP) + 24;
+  const hasSkipPath = sub.approvals.some((approval) => Boolean(approval.condition));
+  const bandHeight = gridHeight + (CARD_TOP - BAND_TOP) + (hasSkipPath ? 84 : 24);
 
   const columnX = columns.map((_, index) => X0 + index * (CARD_W + COL_GAP));
 
@@ -377,7 +397,11 @@ export function buildLayout(sub: SubService): Layout {
     }
 
     for (const [source, target] of pairs) {
-      const branchLabel = source === 'split' ? branchLabels.get(target) : undefined;
+      const branchLabel = source.startsWith('appr-gate-')
+        ? 'Yes'
+        : source === 'split'
+          ? branchLabels.get(target)
+          : undefined;
       edges.push({
         id: `e-${source}-${target}`,
         source,
@@ -395,6 +419,24 @@ export function buildLayout(sub: SubService): Layout {
       });
     }
   }
+
+  columns.forEach((column, index) => {
+    const gate = column.nodes.find((entry) => entry.id.startsWith('appr-gate-'));
+    const skipTo = columns[index + 2]?.nodes[0];
+    if (!gate || !skipTo) {
+      return;
+    }
+    edges.push({
+      id: `e-skip-${gate.id}`,
+      source: gate.id,
+      sourceHandle: 'b',
+      target: skipTo.id,
+      targetHandle: 'l',
+      type: 'flow',
+      markerEnd: { type: MarkerType.ArrowClosed, width: 14, height: 14 },
+      data: { label: 'No · skip approval', dashed: true, muted: true },
+    });
+  });
 
   return { nodes, edges };
 }

@@ -59,6 +59,7 @@ export type ApprovalStep = {
   level: number;
   approverType: string;
   approver: string;
+  condition?: string;
 };
 
 export type Assignment = {

@@ -145,8 +145,18 @@ export const sampleCatalog: Service[] = [
         entitlements: [{ id: 'ENT-004', entitlement: 'DEWA Employees', note: 'Grade 8+' }],
         approvals: [
           { level: 1, approverType: 'ROLE', approver: 'Direct Manager' },
-          { level: 2, approverType: 'GROUP', approver: 'Finance' },
-          { level: 3, approverType: 'GROUP', approver: 'HR Head' },
+          {
+            level: 2,
+            approverType: 'GROUP',
+            approver: 'Finance',
+            condition: 'If trip cost > AED 10,000',
+          },
+          {
+            level: 3,
+            approverType: 'GROUP',
+            approver: 'HR Head',
+            condition: 'If international travel',
+          },
         ],
         assignments: [
           {

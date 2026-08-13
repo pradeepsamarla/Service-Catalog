@@ -154,6 +154,7 @@ export function buildCatalog(sheets: Map<string, unknown[][]>): Service[] {
             level: toNumber(entry.level) ?? 0,
             approverType: entry.approvertype,
             approver: entry.approver,
+            condition: entry.condition || undefined,
           }))
           .sort((a, b) => a.level - b.level),
         assignments: (assignments.get(id) ?? [])

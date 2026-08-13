@@ -13,6 +13,7 @@ export function DecisionNode({ data }: NodeProps<StageNodeData>) {
     >
       <Handle type="target" position={Position.Left} id="l" />
       <Handle type="source" position={Position.Right} id="r" />
+      <Handle type="source" position={Position.Bottom} id="b" />
 
       <div
         className="absolute inset-[14%] rotate-45 rounded-[12px]"

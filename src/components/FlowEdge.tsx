@@ -19,7 +19,7 @@ export function FlowEdge({
     sourcePosition,
     targetPosition,
     borderRadius: 0,
-    offset: 18,
+    offset: data?.dashed ? 54 : 18,
   });
 
   const hero = Boolean(data?.hero);

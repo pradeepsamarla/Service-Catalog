@@ -94,8 +94,11 @@ def parse_ticket_type(text):
     return 'WO' if raw else ''
 
 
+CONDITION_RE = re.compile(r'\(?\s*Condition\s*:\s*([^()]+)\)?', re.IGNORECASE)
+
+
 def parse_approvals(text):
-    """Free-text approval chain -> [(approver_type, approver)] in level order."""
+    """Free-text approval chain -> [(approver_type, approver, condition)] in level order."""
     raw = clean(text)
     if not raw or raw.lower().startswith('no approval'):
         return []
@@ -109,20 +112,24 @@ def parse_approvals(text):
         step = re.sub(r'^\d{1,2}[\.\)]\s*', '', clean(step))
         if not step or step.lower() in ('no approval', 'na'):
             continue
+        condition_match = CONDITION_RE.search(step)
+        condition = clean(condition_match.group(1))[:250] if condition_match else ''
+        if condition_match:
+            step = clean(CONDITION_RE.sub(' ', step))
         group = re.search(r'Support Group Name\s*:\s*([^()]+)', step, re.IGNORECASE)
         if group:
-            levels.append(('GROUP', clean(group.group(1))))
+            levels.append(('GROUP', clean(group.group(1)), condition))
             continue
         custom = re.match(r'Custom\s*:\s*(.+)', step, re.IGNORECASE)
         if custom:
-            levels.append(('CUSTOM', clean(custom.group(1))[:120]))
+            levels.append(('CUSTOM', clean(custom.group(1))[:120], condition))
             continue
         lowered = step.lower()
         if any(word in lowered for word in ROLE_WORDS):
             role = next(word for word in ROLE_WORDS if word in lowered)
-            levels.append(('ROLE', role.title()))
+            levels.append(('ROLE', role.title(), condition))
             continue
-        levels.append(('PERSON', step[:120]))
+        levels.append(('PERSON', step[:120], condition))
     return levels
 
 
@@ -227,10 +234,10 @@ def main():
                     unit,
                 ])
 
-            for level, (approver_type, approver) in enumerate(
+            for level, (approver_type, approver, condition) in enumerate(
                 parse_approvals(pick('approval', name_key, 'ApprovalFlow')), start=1
             ):
-                approvals.append([sub_id, level, approver_type, approver])
+                approvals.append([sub_id, level, approver_type, approver, condition])
 
             ticket_type = parse_ticket_type(pick('fulfillment', name_key, 'Fulfillment Type'))
             groups, mode = parse_support_groups(pick('support', name_key, 'SupportGroup'))
@@ -261,7 +268,10 @@ def main():
             entitlements,
         )),
         ('SLAs', (['sla_id', 'sub_service_id', 'sla_target', 'sla_unit'], slas)),
-        ('Approvals', (['sub_service_id', 'level', 'approver_type', 'approver'], approvals)),
+        ('Approvals', (
+            ['sub_service_id', 'level', 'approver_type', 'approver', 'condition'],
+            approvals,
+        )),
         ('Assignments', (
             ['sub_service_id', 'seq', 'support_group', 'ticket_type', 'execution_mode',
              'condition'],
