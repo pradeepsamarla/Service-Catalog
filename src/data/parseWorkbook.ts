@@ -79,7 +79,8 @@ function toSla(row: Row | undefined): Sla {
     return { target: null, unit: '', label: 'No SLA defined', risk: 'none' };
   }
   const unit = (row?.slaunit ?? '').replace(/_/g, ' ');
-  const plural = target === 1 ? unit : `${unit}s`;
+  const abbreviation = /^[A-Z]{1,3}$/.test(unit);
+  const plural = target === 1 || abbreviation || /s$/i.test(unit) ? unit : `${unit}s`;
   return {
     target,
     unit,
