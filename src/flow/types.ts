@@ -3,7 +3,8 @@ export type StageKind =
   | 'entitlement'
   | 'approval'
   | 'ticket'
-  | 'sla';
+  | 'sla'
+  | 'decision';
 
 export type SlaRisk = 'timed' | 'none';
 
@@ -14,10 +15,16 @@ export type Chip = {
   tone?: 'default' | 'green' | 'red';
 };
 
+export type MetaEntry = {
+  label: string;
+  value: string;
+};
+
 export type StageNodeData = {
   kind: StageKind;
   title: string;
   subtitle?: string;
+  meta?: MetaEntry[];
   chips?: Chip[];
   slaRisk?: SlaRisk;
   muted?: boolean;
@@ -59,6 +66,7 @@ export type Assignment = {
   supportGroup: string;
   ticketType: string;
   executionMode: ExecutionMode;
+  condition?: string;
   tier?: string;
   coverage?: string;
 };
@@ -75,6 +83,8 @@ export type SubService = {
   name: string;
   requestType: string;
   active: boolean;
+  ownerName?: string;
+  ownerEmail?: string;
   entitlements: Entitlement[];
   approvals: ApprovalStep[];
   assignments: Assignment[];

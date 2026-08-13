@@ -1,4 +1,4 @@
-import { getSmoothStepPath, type EdgeProps } from 'reactflow';
+import { EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from 'reactflow';
 import type { FlowEdgeData } from '../flow/types';
 
 export function FlowEdge({
@@ -11,7 +11,7 @@ export function FlowEdge({
   markerEnd,
   data,
 }: EdgeProps<FlowEdgeData>) {
-  const [path] = getSmoothStepPath({
+  const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,
     targetX,
@@ -46,6 +46,22 @@ export function FlowEdge({
           strokeWidth={2.5}
           strokeOpacity={0.75}
         />
+      ) : null}
+      {data?.label ? (
+        <EdgeLabelRenderer>
+          <div
+            className="nodrag nopan max-w-[150px] rounded-full border px-2 py-[3px] text-center text-[9px] font-semibold leading-tight"
+            style={{
+              position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              background: 'var(--surface)',
+              borderColor: 'var(--border)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            {data.label}
+          </div>
+        </EdgeLabelRenderer>
       ) : null}
     </>
   );

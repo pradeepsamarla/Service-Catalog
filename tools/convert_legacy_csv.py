@@ -205,7 +205,7 @@ def main():
 
         for index, (name_key, name) in enumerate(names.items(), start=1):
             sub_id = f'{service_id}-{index:02d}'
-            sub_services.append([sub_id, service_id, name, 'Service Request', 'Y'])
+            sub_services.append([sub_id, service_id, name, 'Service Request', 'Y', '', ''])
 
             raw_entitlement = pick('entitlement', name_key, 'Entitlement')
             note = ''
@@ -236,7 +236,7 @@ def main():
             groups, mode = parse_support_groups(pick('support', name_key, 'SupportGroup'))
             if ticket_type and groups:
                 for seq, group in enumerate(groups, start=1):
-                    assignments.append([sub_id, seq, group, ticket_type, mode])
+                    assignments.append([sub_id, seq, group, ticket_type, mode, ''])
                     support_groups.setdefault(group, ['', '', ''])
 
             raw_fulfillment = pick('fulfillment', name_key, 'Fulfillment Type')
@@ -252,7 +252,8 @@ def main():
             services,
         )),
         ('SubServices', (
-            ['sub_service_id', 'service_id', 'sub_service_name', 'request_type', 'active'],
+            ['sub_service_id', 'service_id', 'sub_service_name', 'request_type', 'active',
+             'owner_name', 'owner_email'],
             sub_services,
         )),
         ('Entitlements', (
@@ -262,7 +263,8 @@ def main():
         ('SLAs', (['sla_id', 'sub_service_id', 'sla_target', 'sla_unit'], slas)),
         ('Approvals', (['sub_service_id', 'level', 'approver_type', 'approver'], approvals)),
         ('Assignments', (
-            ['sub_service_id', 'seq', 'support_group', 'ticket_type', 'execution_mode'],
+            ['sub_service_id', 'seq', 'support_group', 'ticket_type', 'execution_mode',
+             'condition'],
             assignments,
         )),
         ('SupportGroups', (

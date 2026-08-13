@@ -100,16 +100,24 @@ separator-insensitive):
 | Sheet | Grain | Columns |
 | --- | --- | --- |
 | `Services` | one parent service | `service_id, service_name, domain, owner_name, owner_pr_id, owner_email, description` |
-| `SubServices` | one Service Request definition | `sub_service_id, service_id, sub_service_name, request_type, active` |
+| `SubServices` | one Service Request definition | `sub_service_id, service_id, sub_service_name, request_type, active, owner_name, owner_email` |
 | `Entitlements` | one entitlement rule | `entitlement_id, sub_service_id, entitlement, entitlement_note` |
 | `SLAs` | one SLA per sub-service | `sla_id, sub_service_id, sla_target, sla_unit` |
 | `Approvals` | one approval level | `sub_service_id, level, approver_type, approver` |
-| `Assignments` | one child ticket (WO/INC) | `sub_service_id, seq, support_group, ticket_type, execution_mode` (`PARALLEL` \| `SEQUENCE`) |
+| `Assignments` | one child ticket (WO/INC) | `sub_service_id, seq, support_group, ticket_type, execution_mode` (`PARALLEL` \| `SEQUENCE`), `condition` |
 | `SupportGroups` | one support group | `support_group_id, support_group, tier, coverage, email` |
 | `Attributes` | one key/value extra | `entity_type, entity_id, key, value, data_type` |
 
 The Service Request is always the parent; every `Assignments` row is a child ticket under
 it. No `Approvals` rows ⇒ auto-approved; no `SLAs` row ⇒ "No SLA defined".
+
+Sub-service `owner_name` / `owner_email` are shown on the Service Request card, and when a
+sub-service has more than one `PARALLEL` child ticket the flow inserts a decision diamond
+before the split; each `condition` is drawn on its branch. Cards grow to fit their content,
+so long entitlement or approval text is never clipped.
+
+`tools/convert_legacy_csv.py` converts a legacy flat catalogue export (one row per service,
+free-text approval/support-group columns) into this workbook.
 
 ## Layout of the code
 

@@ -40,7 +40,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, ease: 'easeOut' }}
       whileHover={{ y: -3 }}
-      className="group"
+      className="group h-full w-full"
     >
       <Handle type="target" position={Position.Left} id="l" />
       <Handle type="target" position={Position.Top} id="t" />
@@ -48,7 +48,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
       <Handle type="source" position={Position.Bottom} id="b" />
 
       <div
-        className="relative flex h-[96px] w-[216px] flex-col justify-center overflow-hidden rounded-[10px] px-3.5 py-3 transition-shadow duration-200"
+        className="relative flex h-full min-h-[96px] w-full flex-col justify-center rounded-[10px] px-3.5 py-3 transition-shadow duration-200"
         style={{
           background: data.muted ? 'var(--surface-muted)' : 'var(--surface)',
           border: `1px solid ${
@@ -84,11 +84,32 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
               </div>
             ) : null}
             <div
-              className="mt-0.5 text-[12.5px] font-semibold leading-snug"
+              className="mt-0.5 break-words text-[12.5px] font-semibold leading-snug"
               style={{ color: data.muted ? 'var(--text-muted)' : 'var(--text)' }}
             >
               {data.title}
             </div>
+
+            {data.meta?.length ? (
+              <div className="mt-2 space-y-1">
+                {data.meta.map((entry) => (
+                  <div key={entry.label}>
+                    <div
+                      className="text-[8.5px] font-semibold uppercase tracking-[0.12em]"
+                      style={{ color: 'var(--text-subtle)' }}
+                    >
+                      {entry.label}
+                    </div>
+                    <div
+                      className="break-words text-[10.5px] leading-snug"
+                      style={{ color: 'var(--text-muted)' }}
+                    >
+                      {entry.value}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
           </div>
         </div>
 
@@ -97,7 +118,7 @@ export function StageNode({ data, selected }: NodeProps<StageNodeData>) {
             {data.chips.map((chip) => (
               <span
                 key={chip.label}
-                className="rounded-full border px-2 py-[3px] text-[9.5px] font-medium leading-none"
+                className="max-w-full break-words rounded-full border px-2 py-[3px] text-[9.5px] font-medium leading-tight"
                 style={chipStyle(chip.tone)}
               >
                 {chip.label}

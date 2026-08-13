@@ -11,6 +11,7 @@ import 'reactflow/dist/style.css';
 import { buildLayout } from '../flow/layout';
 import type { SubService } from '../flow/types';
 import { ColumnHeader } from './ColumnHeader';
+import { DecisionNode } from './DecisionNode';
 import { FlowEdge } from './FlowEdge';
 import { Legend } from './Legend';
 import { PhaseBand } from './PhaseBand';
@@ -18,13 +19,14 @@ import { StageNode } from './StageNode';
 
 const nodeTypes = {
   stage: StageNode,
+  decision: DecisionNode,
   phaseBand: PhaseBand,
   columnHeader: ColumnHeader,
 };
 const edgeTypes = { flow: FlowEdge };
 
 function minimapNodeColor(node: Node) {
-  if (node.type === 'stage') {
+  if (node.type === 'stage' || node.type === 'decision') {
     return 'var(--text-subtle)';
   }
   if (node.type === 'phaseBand') {

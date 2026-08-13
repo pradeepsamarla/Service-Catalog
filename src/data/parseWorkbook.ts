@@ -142,6 +142,8 @@ export function buildCatalog(sheets: Map<string, unknown[][]>): Service[] {
         name: sub.subservicename,
         requestType: sub.requesttype || 'Service Request',
         active: !/^n(o)?$/i.test(sub.active || 'Y'),
+        ownerName: sub.ownername || undefined,
+        ownerEmail: sub.owneremail || undefined,
         entitlements: (entitlements.get(id) ?? []).map<Entitlement>((entry) => ({
           id: entry.entitlementid,
           entitlement: entry.entitlement,
@@ -162,6 +164,7 @@ export function buildCatalog(sheets: Map<string, unknown[][]>): Service[] {
               supportGroup: entry.supportgroup,
               ticketType: ticketTypeLabel(entry.tickettype),
               executionMode: toExecutionMode(entry.executionmode),
+              condition: entry.condition || undefined,
               tier: group?.tier,
               coverage: group?.coverage,
             };
