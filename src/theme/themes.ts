@@ -153,6 +153,15 @@ export const THEMES: Theme[] = [
 
 export const DEFAULT_THEME: ThemeId = 'light';
 
+/**
+ * Resolved token value. SVG presentation attributes are exported as literal
+ * colours so image exports keep the same palette as the canvas.
+ */
+export function themeVar(id: ThemeId, token: string) {
+  const theme = THEMES.find((candidate) => candidate.id === id) ?? THEMES[0];
+  return theme.vars[token] ?? '';
+}
+
 export function applyTheme(id: ThemeId) {
   const theme = THEMES.find((candidate) => candidate.id === id) ?? THEMES[0];
   const root = document.documentElement;

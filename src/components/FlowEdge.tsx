@@ -1,5 +1,7 @@
 import { EdgeLabelRenderer, getSmoothStepPath, type EdgeProps } from 'reactflow';
 import type { FlowEdgeData } from '../flow/types';
+import { useTheme } from '../theme/ThemeContext';
+import { themeVar } from '../theme/themes';
 
 export function FlowEdge({
   sourceX,
@@ -22,15 +24,17 @@ export function FlowEdge({
     offset: data?.dashed ? 54 : 18,
   });
 
+  const { theme } = useTheme();
   const hero = Boolean(data?.hero);
   const muted = Boolean(data?.muted);
+  const stroke = themeVar(theme, hero ? '--edge-active' : '--edge');
 
   return (
     <>
       <path
         d={path}
         fill="none"
-        stroke={hero ? 'var(--edge-active)' : 'var(--edge)'}
+        stroke={stroke}
         strokeWidth={hero ? 2 : 1.25}
         strokeOpacity={muted ? 0.4 : 1}
         strokeDasharray={muted ? '4 4' : undefined}
@@ -42,7 +46,7 @@ export function FlowEdge({
           className="edge-flow"
           d={path}
           fill="none"
-          stroke="var(--edge-active)"
+          stroke={themeVar(theme, '--edge-active')}
           strokeWidth={2.5}
           strokeOpacity={0.75}
         />

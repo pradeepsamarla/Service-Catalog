@@ -91,6 +91,17 @@ theme means adding one entry to `THEMES`.
   "No SLA defined" box.
 - **Canvas** — orthogonal connectors, pan/zoom, MiniMap, Controls, legend.
 
+## Exporting a flow
+
+With a sub-service flow open, **Export** offers:
+
+- **PNG image** — 2× pixel ratio raster of the whole flow.
+- **PDF document** — single page sized to the flow, so nothing is scaled down or cropped.
+
+Both cover the full flow extent (not just the visible viewport), keep the active theme's
+colours, and are named `<service>-<sub-service>.<ext>`. Logic lives in
+`src/flow/exportFlow.ts`; bounds come from the same `buildLayout` used by the canvas.
+
 ## Importing a workbook
 
 Click **Import workbook** and pick an `.xlsx` file; **Template** downloads the expected
