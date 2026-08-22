@@ -61,6 +61,25 @@ docker run --rm -p 8080:80 itsm-service-flow
 The container serves a production build, so it does not hot-reload — use
 `npm run dev` for development.
 
+## Run on Kubernetes
+
+Manifests are in `k8s/` (Deployment, ClusterIP Service, optional Ingress). The app is a
+static SPA, so there is nothing to configure — no env vars, no database.
+
+```bash
+docker build -t itsm-service-flow:latest .          # or push to your registry and
+                                                    # update image: in k8s/deployment.yaml
+kubectl apply -f k8s/deployment.yaml -f k8s/service.yaml
+kubectl rollout status deploy/itsm-service-flow
+kubectl port-forward svc/itsm-service-flow 8080:80  # http://localhost:8080
+```
+
+With Docker Desktop's built-in Kubernetes the locally built image is already visible to
+the cluster (`imagePullPolicy: IfNotPresent`). On minikube run
+`minikube image load itsm-service-flow:latest` first. To expose it through a hostname
+instead of `port-forward`, install an ingress controller and
+`kubectl apply -f k8s/ingress.yaml`.
+
 ## Themes
 
 Three themes are switchable from the top-right control and persisted in
