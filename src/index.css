@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  html[data-theme='light'] {
+    color-scheme: light;
+  }
+}
+
+@layer components {
+  .surface-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+  }
+
+  .surface-panel {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-card);
+  }
+}
+
+/* Ambient background wash */
+@keyframes wash-drift {
+  0% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(3%, 2%, 0) scale(1.08);
+  }
+  100% {
+    transform: translate3d(-2%, -1%, 0) scale(1);
+  }
+}
+
+.wash {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(140px);
+  will-change: transform;
+  animation: wash-drift 40s ease-in-out infinite;
+}
+
+/* React Flow overrides */
+.react-flow__node {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  font-size: inherit;
+  color: inherit;
+  width: auto;
+}
+
+.react-flow__handle {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.react-flow__attribution {
+  display: none;
+}
+
+.react-flow__controls-button {
+  background: var(--surface-raised);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+  fill: var(--text-muted);
+}
+
+.react-flow__controls-button:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+  fill: var(--text);
+}
+
+.react-flow__controls,
+.react-flow__minimap {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -20;
+  }
+}
+
+.edge-flow {
+  stroke-dasharray: 4 8;
+  animation: dash-flow 1.1s linear infinite;
+}

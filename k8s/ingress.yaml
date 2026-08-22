@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: itsm-service-flow
+  labels:
+    app.kubernetes.io/name: itsm-service-flow
+spec:
+  # Docker Desktop / minikube: install an ingress controller first, then
+  # point service-flow.localhost (or your own host) at the cluster.
+  ingressClassName: nginx
+  rules:
+    - host: service-flow.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: itsm-service-flow
+                port:
+                  name: http
